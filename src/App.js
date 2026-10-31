@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function GanaderiaApp() {
   const [activeTab, setActiveTab] = useState('inicio');
   const [animales, setAnimales] = useState([
     { id: 'ARG-2026-001', caravana: 'NV-9981', categoria: 'Vaca', peso: '450 kg', estado: 'Activo', fecha: '2026-10-01' },
-    { id: 'ARG-2026-002', caravana: 'NV-9982', categoria: 'Ternero', peso: '180 kg', estado: 'Activo', fecha: '2026-10-05' },
-    { id: 'ARG-2026-003', caravana: 'NV-9983', categoria: 'Novillo', peso: '380 kg', estado: 'Activo', fecha: '2026-10-10' }
+    { id: 'ARG-2026-002', caravana: 'NV-9982', categoria: 'Ternero', peso: '180 kg', estado: 'Activo', fecha: '2026-10-05' }
   ]);
   
   const [filtroCaravana, setFiltroCaravana] = useState('');
@@ -13,8 +12,60 @@ export default function GanaderiaApp() {
   const [nuevaCaravana, setNuevaCaravana] = useState('');
   const [nuevaCategoria, setNuevaCategoria] = useState('Vaca');
   const [nuevoPeso, setNuevoPeso] = useState('');
+  
+  // Estados para Bluetooth y Voz
+  const [estadoBluetooth, setEstadoBluetooth] = useState('Desconectado');
+  const [escuchandoVoz, setEscuchandoVoz] = useState(false);
 
-  // Función para agregar animal
+  // 1. Integración Web Bluetooth (para bastones lectores)
+  const conectarBastonBluetooth = async () => {
+    try {
+      setEstadoBluetooth('Buscando dispositivos...');
+      if (!navigator.bluetooth) {
+        alert('Tu navegador no soporta Web Bluetooth.');
+        setEstadoBluetooth('No compatible');
+        return;
+      }
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: ['battery_service']
+      });
+      const server = await device.gatt.connect();
+      setEstadoBluetooth(`Conectado a: ${device.name || 'Bastón Lector'}`);
+    } catch (error) {
+      console.error(error);
+      setEstadoBluetooth('Error de conexión');
+    }
+  };
+
+  // 2. Reconocimiento de Voz para ingreso manos libres en corral
+  const iniciarComandoVoz = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('El reconocimiento de voz no está disponible en este navegador.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-AR';
+    recognition.start();
+    setEscuchandoVoz(true);
+
+    recognition.onresult = (event) => {
+      const texto = event.results[0][0].transcript;
+      setNuevaCaravana(texto.replace(/\s+/g, '').toUpperCase());
+      setEscuchandoVoz(false);
+    };
+
+    recognition.onerror = () => {
+      setEscuchandoVoz(false);
+    };
+
+    recognition.onend = () => {
+      setEscuchandoVoz(false);
+    };
+  };
+
+  // Agregar animal
   const agregarAnimal = (e) => {
     e.preventDefault();
     if (!nuevaCaravana || !nuevoPeso) return;
@@ -34,7 +85,7 @@ export default function GanaderiaApp() {
     setActiveTab('registro');
   };
 
-  // Filtrado por caravana/ID y categoría
+  // Filtrado
   const animalesFiltrados = animales.filter(anim => {
     const coincideTexto = anim.caravana.toLowerCase().includes(filtroCaravana.toLowerCase()) ||
                           anim.id.toLowerCase().includes(filtroCaravana.toLowerCase());
@@ -42,7 +93,7 @@ export default function GanaderiaApp() {
     return coincideTexto && coincideCat;
   });
 
-  // Función para exportar a Excel (CSV)
+  // Exportar a Excel (CSV)
   const exportarAExcel = () => {
     let contenidoCSV = "ID SENASA,Caravana,Categoria,Peso,Estado,Fecha Registro\n";
     animales.forEach(a => {
@@ -64,60 +115,45 @@ export default function GanaderiaApp() {
       {/* Encabezado */}
       <header style={{ backgroundColor: '#2c5e3b', color: 'white', padding: '20px', borderRadius: '8px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
         <h1 style={{ margin: '0 0 5px 0', fontSize: '28px' }}>Ganadería 360</h1>
-        <p style={{ margin: 0, fontSize: '15px', opacity: 0.9 }}>Sistema Integral de Gestión, Trazabilidad y Control Ganadero</p>
+        <p style={{ margin: 0, fontSize: '15px', opacity: 0.9 }}>Sistema Integral con Bluetooth, Comandos por Voz y Trazabilidad</p>
       </header>
 
       {/* Barra de Navegación */}
       <nav style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button 
-          onClick={() => setActiveTab('inicio')}
-          style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'inicio' ? '#2c5e3b' : '#ffffff', color: activeTab === 'inicio' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>
-          🏠 Inicio
-        </button>
-        <button 
-          onClick={() => setActiveTab('registro')}
-          style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'registro' ? '#2c5e3b' : '#ffffff', color: activeTab === 'registro' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>
-          📋 Listado y Filtros ({animales.length})
-        </button>
-        <button 
-          onClick={() => setActiveTab('reportes')}
-          style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'reportes' ? '#2c5e3b' : '#ffffff', color: activeTab === 'reportes' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>
-          📊 Reportes y Excel
-        </button>
-        <button 
-          onClick={() => setActiveTab('nuevo')}
-          style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'nuevo' ? '#2c5e3b' : '#ffffff', color: activeTab === 'nuevo' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>
-          ➕ Nuevo Animal
-        </button>
+        <button onClick={() => setActiveTab('inicio')} style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'inicio' ? '#2c5e3b' : '#ffffff', color: activeTab === 'inicio' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>🏠 Inicio</button>
+        <button onClick={() => setActiveTab('registro')} style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'registro' ? '#2c5e3b' : '#ffffff', color: activeTab === 'registro' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>📋 Listado y Filtros ({animales.length})</button>
+        <button onClick={() => setActiveTab('reportes')} style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'reportes' ? '#2c5e3b' : '#ffffff', color: activeTab === 'reportes' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>📊 Reportes y Excel</button>
+        <button onClick={() => setActiveTab('nuevo')} style={{ padding: '10px 18px', cursor: 'pointer', backgroundColor: activeTab === 'nuevo' ? '#2c5e3b' : '#ffffff', color: activeTab === 'nuevo' ? 'white' : '#2c5e3b', border: '1px solid #2c5e3b', borderRadius: '6px', fontWeight: 'bold' }}>➕ Nuevo Animal</button>
       </nav>
 
-      {/* Contenido según la pestaña */}
+      {/* Contenido principal */}
       <main style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
         
-        {/* PESTAÑA INICIO */}
         {activeTab === 'inicio' && (
           <div>
-            <h2>Panel Principal de Operaciones</h2>
-            <p>Sistema optimizado para establecimientos ganaderos con sincronización offline-first.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            <h2>Panel Principal y Conectividad de Campo</h2>
+            <p>Control offline-first para establecimientos ganaderos con soporte para hardware externo.</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginTop: '20px' }}>
               <div style={{ padding: '20px', backgroundColor: '#eef4f0', borderRadius: '8px', borderLeft: '6px solid #2c5e3b' }}>
                 <h3 style={{ margin: '0 0 10px 0', color: '#2c5e3b' }}>Total Registrados</h3>
                 <p style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>{animales.length} <span style={{ fontSize: '16px', fontWeight: 'normal' }}>animales</span></p>
               </div>
               <div style={{ padding: '20px', backgroundColor: '#eef4f0', borderRadius: '8px', borderLeft: '6px solid #2c5e3b' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: '#2c5e3b' }}>Estado del Sistema</h3>
-                <p style={{ fontSize: '16px', margin: '5px 0 0 0', color: '#2e7d32', fontWeight: 'bold' }}>● Conectado y Sincronizado</p>
+                <h3 style={{ margin: '0 0 10px 0', color: '#2c5e3b' }}>Bastón Bluetooth</h3>
+                <p style={{ fontSize: '15px', margin: '5px 0 10px 0', fontWeight: 'bold', color: '#333' }}>{estadoBluetooth}</p>
+                <button onClick={conectarBastonBluetooth} style={{ padding: '8px 14px', backgroundColor: '#2c5e3b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  Conectar Bastón
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* PESTAÑA REGISTRO Y FILTROS */}
         {activeTab === 'registro' && (
           <div>
             <h2>Listado General y Filtros por Caravana</h2>
             
-            {/* Controles de Filtro */}
             <div style={{ display: 'flex', gap: '15px', margin: '20px 0', flexWrap: 'wrap' }}>
               <div style={{ flex: 2, minWidth: '220px' }}>
                 <input 
@@ -136,6 +172,7 @@ export default function GanaderiaApp() {
                   <option value="Todas">Todas las categorías</option>
                   <option value="Vaca">Vaca</option>
                   <option value="Ternero">Ternero</option>
+                  <option value="Ternera">Ternera</option>
                   <option value="Toro">Toro</option>
                   <option value="Novillo">Novillo</option>
                   <option value="Vaququiona">Vaququiona</option>
@@ -170,7 +207,7 @@ export default function GanaderiaApp() {
                   ) : (
                     <tr>
                       <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: '#777' }}>
-                        No se encontraron animales que coincidan con los filtros aplicados.
+                        No se encontraron animales con los filtros aplicados.
                       </td>
                     </tr>
                   )}
@@ -180,31 +217,42 @@ export default function GanaderiaApp() {
           </div>
         )}
 
-        {/* PESTAÑA REPORTES Y EXCEL */}
         {activeTab === 'reportes' && (
           <div>
             <h2>Reportes y Exportación de Datos</h2>
-            <p>Generación de planillas compatibles con Microsoft Excel (.csv) para auditorías y control interno.</p>
+            <p>Generación de planillas compatibles con Microsoft Excel (.csv) para auditorías.</p>
             
             <div style={{ marginTop: '25px', padding: '25px', backgroundColor: '#f4f9f4', borderRadius: '8px', border: '1px solid #c8e6c9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
               <div>
                 <h3 style={{ color: '#2c5e3b', margin: '0 0 5px 0' }}>Planilla General de Animales</h3>
                 <p style={{ margin: 0, color: '#555' }}>Exporta todos los registros actuales almacenados en el sistema.</p>
               </div>
-              <button 
-                onClick={exportarAExcel}
-                style={{ padding: '12px 24px', backgroundColor: '#2c5e3b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <button onClick={exportarAExcel} style={{ padding: '12px 24px', backgroundColor: '#2c5e3b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 📥 Descargar Archivo Excel (.CSV)
               </button>
             </div>
           </div>
         )}
 
-        {/* PESTAÑA NUEVO ANIMAL */}
         {activeTab === 'nuevo' && (
           <div>
             <h2>Registrar Nuevo Animal en Corral</h2>
-            <form onSubmit={agregarAnimal} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '450px', marginTop: '20px' }}>
+            
+            {/* Botón de Asistente por Voz */}
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#eef4f0', borderRadius: '6px', border: '1px dashed #2c5e3b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <strong style={{ color: '#2c5e3b' }}>Ingreso por Voz (Manos Libres)</strong>
+                <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#555' }}>Dictá el número de caravana hablándole al micrófono.</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={iniciarComandoVoz} 
+                style={{ padding: '10px 16px', backgroundColor: escuchandoVoz ? '#d9534f' : '#2c5e3b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                {escuchandoVoz ? '🎤 Escuchando...' : '🎙️ Dictar Caravana'}
+              </button>
+            </div>
+
+            <form onSubmit={agregarAnimal} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '450px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Número de Caravana:</label>
                 <input 
@@ -224,6 +272,7 @@ export default function GanaderiaApp() {
                   style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '6px', border: '1px solid #ccc' }}>
                   <option value="Vaca">Vaca</option>
                   <option value="Ternero">Ternero</option>
+                  <option value="Ternera">Ternera</option>
                   <option value="Toro">Toro</option>
                   <option value="Novillo">Novillo</option>
                   <option value="Vaququiona">Vaququiona</option>
@@ -240,9 +289,7 @@ export default function GanaderiaApp() {
                   style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '6px', border: '1px solid #ccc' }}
                 />
               </div>
-              <button 
-                type="submit" 
-                style={{ padding: '12px', backgroundColor: '#2c5e3b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
+              <button type="submit" style={{ padding: '12px', backgroundColor: '#2c5e3b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
                 Guardar y Registrar Animal
               </button>
             </form>
