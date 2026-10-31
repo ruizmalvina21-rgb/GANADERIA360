@@ -1,4 +1,4 @@
-Import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function App() {
   const NOMBRE_APLICACION = 'GanadoGestión AR';
@@ -8,7 +8,6 @@ export default function App() {
 
   const [tab, setTab] = useState('diario');
 
-  // Control de Suscripción (15 días de prueba libre)
   const [fechaRegistroApp] = useState(() => {
     let saved = localStorage.getItem('ganado_fecha_registro_app');
     if (!saved) {
@@ -36,7 +35,6 @@ export default function App() {
     return '';
   };
 
-  // Datos Institucionales y RENSPA del Productor (Permite carga limpia si está vacío)
   const [productor, setProductor] = useState(() => {
     const saved = localStorage.getItem('ganado_productor_info');
     return saved ? JSON.parse(saved) : {
@@ -66,8 +64,6 @@ export default function App() {
   };
 
   const [potreroActual, setPotreroActual] = useState(productor.lotes[0] || 'General');
-
-  // Prefijo de 10 dígitos del campo
   const [prefijoCampo, setPrefijoCampo] = useState(() => {
     return localStorage.getItem('ganado_prefijo_10') || '0001234567';
   });
@@ -79,45 +75,36 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  // Registros definitivos actuales
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem('ganado_registros_diarios');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // ARCHIVO HISTÓRICO DE LOTES Y CARPETAS
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem('ganado_archivo_historico');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Filtros para el Archivo Histórico
   const [filtroOperacionHistorial, setFiltroOperacionHistorial] = useState('TODAS');
   const [filtroPotreroHistorial, setFiltroPotreroHistorial] = useState('TODOS');
-
   const [loteTemporal, setLoteTemporal] = useState([]);
 
-  // Packs de caravanas compradas
   const [packsComprados, setPacksComprados] = useState(() => {
     const saved = localStorage.getItem('ganado_packs_comprados');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [cantidadPackSeleccionada, setCantidadPackSeleccionada] = useState(100);
-
-  // Entradas de texto para manga
   const [rangoDesde, setRangoDesde] = useState('');
   const [RangoHasta, setRangoHasta] = useState('');
   const [bloqueTexto, setBloqueTexto] = useState('');
   const [estaDictando, EstaDictando] = useState(false);
 
-  // Estados para Bluetooth, Cámara Real y Voz
   const [conectadoBluetooth, setConectadoBluetooth] = useState(false);
   const [dispositivoBaston, setDispositivoBaston] = useState(null);
   const [escaneandoCamara, setEscaneandoCamara] = useState(false);
   const scannerRef = useRef(null);
 
-  // Registro Sanitario y Vacunaciones
   const [vacunaciones, setVacunaciones] = useState(() => {
     const saved = localStorage.getItem('ganado_vacunaciones');
     return saved ? JSON.parse(saved) : [];
@@ -127,17 +114,9 @@ export default function App() {
   const [loteVacuna, setLoteVacuna] = useState('');
 
   const listaCategoriasDisponibles = [
-    'Terneros',
-    'Terneras',
-    'Novillitos',
-    'Toritos',
-    'Novillos',
-    'Vaquillonas',
-    'Vacas',
-    'Toros'
+    'Terneros', 'Terneras', 'Novillitos', 'Toritos', 'Novillos', 'Vaquillonas', 'Vacas', 'Toros'
   ];
 
-  // Inyectar librería real de escaneo de cámara
   useEffect(() => {
     if (!document.getElementById('html5-qrcode-script')) {
       const script = document.createElement('script');
@@ -178,7 +157,6 @@ export default function App() {
     window.open(`https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensajeSuscripcion)}`, '_blank');
   };
 
-  // BOTÓN DE CONSULTORÍA / ASESORAMIENTO TÉCNICO DIRECTO POR WHATSAPP
   const abrirConsultoriaWhatsApp = () => {
     let mensajeConsultoria = `*💬 CONSULTA TÉCNICA / ASESORAMIENTO - ${NOMBRE_APLICACION}*\n`;
     mensajeConsultoria += `Hola, necesito soporte técnico o asesoramiento institucional sobre el uso de la aplicación en el campo.`;
@@ -574,7 +552,6 @@ export default function App() {
       <div style={styles.body}>
         {tab === 'diario' && (
           <div>
-            {/* DATOS INSTITUCIONALES / CONFIGURACIÓN DE ESTABLECIMIENTO */}
             <div style={{ ...styles.card, border: '2px solid #0288d1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ color: '#81c784', margin: 0 }}>🏢 Establecimiento y RENSPA</h3>
@@ -636,11 +613,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* ZONA DE CAPTURA EN MANGA */}
             <div style={{ ...styles.card, border: '2px solid #0277bd' }}>
               <h3 style={{ color: '#81c784', marginTop: 0 }}>⚡ Métodos de Captura en Manga</h3>
               
-              {/* BASTÓN BLUETOOTH */}
               <div style={{ background: '#111', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.8rem', border: '1px solid #333' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -659,7 +634,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CÁMARA ESCÁNER */}
               <div style={{ background: '#111', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.8rem', border: '1px solid #333', textAlign: 'center' }}>
                 <div id="reader-camara-real" style={{ width: '100%', maxWidth: '350px', margin: '0 auto', display: escaneandoCamara ? 'block' : 'none' }}></div>
                 {!escaneandoCamara ? (
@@ -673,7 +647,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* FOTO PLANILLA */}
               <div style={{ marginBottom: '0.8rem' }}>
                 <label style={{ ...styles.btnMain, backgroundColor: '#c2185b', fontSize: '0.9rem', textAlign: 'center', display: 'block', lineHeight: '1.2rem', cursor: 'pointer', boxSizing: 'border-box' }}>
                   🖼️ Subir Foto de Planilla Escrita
@@ -681,7 +654,6 @@ export default function App() {
                 </label>
               </div>
 
-              {/* DICTADO POR VOZ */}
               <div style={{ marginBottom: '0.8rem' }}>
                 {!estaDictando ? (
                   <button style={{ ...styles.btnMain, backgroundColor: '#0277bd', fontSize: '0.9rem', marginTop: 0 }} onClick={iniciarDictadoVozContinuo}>
@@ -694,7 +666,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* RANGOS */}
               <div style={{ marginTop: '1rem', borderTop: '1px solid #444', paddingTop: '1rem' }}>
                 <label style={{ color: '#aaa', fontSize: '0.85rem' }}>O Carga por Rango Correlativo:</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1rem' }}>
@@ -707,7 +678,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* LOTE TEMPORAL EN PREPARACIÓN */}
             {loteTemporal.length > 0 && (
               <div style={{ ...styles.card, border: '2px solid #ffb74d', background: '#1c1b18' }}>
                 <h3 style={{ color: '#ffb74d', marginTop: 0 }}>
@@ -748,7 +718,6 @@ export default function App() {
               </div>
             )}
 
-            {/* LISTADO DEFINITIVO DE HOY */}
             <div style={styles.card}>
               <h3 style={{ color: '#81c784', marginTop: 0 }}>
                 📋 Listado Consolidado Definitivo 
@@ -778,7 +747,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: ARCHIVO HISTÓRICO */}
         {tab === 'archivo' && (
           <div style={styles.card}>
             <h3 style={{ color: '#81c784', marginTop: 0 }}>📁 Carpeta de Archivo Histórico de Lotes</h3>
@@ -845,7 +813,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: STOCK GENERAL */}
         {tab === 'stock_general' && (
           <div>
             <div style={styles.card}>
@@ -866,7 +833,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: SANIDAD */}
         {tab === 'sanidad' && (
           <div style={{ ...styles.card, border: '2px solid #c62828' }}>
             <h3 style={{ color: '#ff8a80', marginTop: 0 }}>⚠️ Alerta Obligatoria: Vacunación Antibrusélica (Brucelosis)</h3>
@@ -879,7 +845,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: COMPRA DE PACKS DE CARAVANAS */}
         {tab === 'packs' && (
           <div style={{ ...styles.card, border: '2px solid #0288d1' }}>
             <h3 style={{ color: '#81c784', marginTop: 0 }}>📦 Solicitar Packs de Caravanas</h3>
@@ -904,7 +869,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: SUSCRIPCIÓN */}
         {tab === 'suscripcion' && (
           <div style={{ ...styles.card, border: '2px solid #f57c00', textAlign: 'center' }}>
             <h3 style={{ color: '#ffb74d', marginTop: 0 }}>💳 Estado de Suscripción de {NOMBRE_APLICACION}</h3>
@@ -939,7 +903,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PESTAÑA: REPORTES Y BOTÓN CLARO DE CONSULTORÍA */}
         {tab === 'whatsapp' && (
           <div style={styles.card}>
             <h3 style={{ color: '#81c784', marginTop: 0, textAlign: 'center' }}>💬 Soporte y Reportes Oficiales</h3>
