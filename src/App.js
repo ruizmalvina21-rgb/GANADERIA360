@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function App() {
   const NOMBRE_APLICACION = 'GanadoGestión AR';
@@ -9,10 +9,10 @@ export default function App() {
   const [tab, setTab] = useState('diario');
 
   const [fechaRegistroApp] = useState(() => {
-    let saved = localStorage.getItem('ganado_fecha_registro_app');
+    let saved = localStorage.getItem('ganado_fecha_registro_app_v9');
     if (!saved) {
       saved = new Date().toISOString();
-      localStorage.setItem('ganado_fecha_registro_app', saved);
+      localStorage.setItem('ganado_fecha_registro_app_v9', saved);
     }
     return new Date(saved);
   });
@@ -36,7 +36,7 @@ export default function App() {
   };
 
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_establecimientos_v8');
+    const saved = localStorage.getItem('ganado_establecimientos_v9');
     if (saved) return JSON.parse(saved);
     return [
       {
@@ -51,7 +51,7 @@ export default function App() {
   });
 
   const [estacionActivaId, setEstacionActivaId] = useState(() => {
-    const saved = localStorage.getItem('ganado_estacion_activa_id');
+    const saved = localStorage.getItem('ganado_estacion_activa_id_v9');
     return saved ? Number(saved) : 1;
   });
 
@@ -87,7 +87,7 @@ export default function App() {
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v8', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v9', JSON.stringify(actualizados));
     setEditandoEstablecimiento(false);
     alert('✅ Datos guardados correctamente.');
   };
@@ -108,15 +108,15 @@ export default function App() {
 
     let actualizados = [...establecimientos, nuevoEst];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v8', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v9', JSON.stringify(actualizados));
     setEstacionActivaId(nuevoEst.id);
-    localStorage.setItem('ganado_estacion_activa_id', nuevoEst.id);
+    localStorage.setItem('ganado_estacion_activa_id_v9', nuevoEst.id);
     alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado.`);
   };
 
   const seleccionarEstablecimiento = (id) => {
     setEstacionActivaId(id);
-    localStorage.setItem('ganado_estacion_activa_id', id);
+    localStorage.setItem('ganado_estacion_activa_id_v9', id);
   };
 
   const [operacionActual, setOperacionActual] = useState('Nacimiento');
@@ -126,13 +126,13 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  const claveReg = `ganado_registros_v8_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_registros_v9_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_historico_v8_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_historico_v9_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
@@ -140,8 +140,8 @@ export default function App() {
 
   useEffect(() => {
     const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
-    const cReg = `ganado_registros_v8_${idKey}`;
-    const cHist = `ganado_historico_v8_${idKey}`;
+    const cReg = `ganado_registros_v9_${idKey}`;
+    const cHist = `ganado_historico_v9_${idKey}`;
     const regSaved = localStorage.getItem(cReg);
     const histSaved = localStorage.getItem(cHist);
     setRegistrosDiarios(regSaved ? JSON.parse(regSaved) : []);
@@ -152,23 +152,16 @@ export default function App() {
   const [loteTemporal, setLoteTemporal] = useState([]);
 
   const [packsComprados, setPacksComprados] = useState(() => {
-    const saved = localStorage.getItem('ganado_packs_comprados');
+    const saved = localStorage.getItem('ganado_packs_comprados_v9');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [cantidadPackSeleccionada, setCantidadPackSeleccionada] = useState(100);
   const [rangoDesde, setRangoDesde] = useState('');
   const [RangoHasta, setRangoHasta] = useState('');
-  const [bloqueTexto, setBloqueTexto] = useState('');
-  const [estaDictando, EstaDictando] = useState(false);
-
-  const [conectadoBluetooth, setConectadoBluetooth] = useState(false);
-  const [dispositivoBaston, setDispositivoBaston] = useState(null);
-  const [escaneandoCamara, setEscaneandoCamara] = useState(false);
-  const scannerRef = useRef(null);
 
   const [vacunaciones, setVacunaciones] = useState(() => {
-    const saved = localStorage.getItem('ganado_vacunaciones');
+    const saved = localStorage.getItem('ganado_vacunaciones_v9');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -179,16 +172,6 @@ export default function App() {
     'Terneros', 'Terneras', 'Novillitos', 'Toritos', 'Novillos', 'Vaquillonas', 'Vacas', 'Toros'
   ];
 
-  useEffect(() => {
-    if (!document.getElementById('html5-qrcode-script')) {
-      const script = document.createElement('script');
-      script.id = 'html5-qrcode-script';
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  }, []);
-
   const comprarPackCaravanas = () => {
     let nuevoPack = {
       id: Date.now(),
@@ -197,7 +180,7 @@ export default function App() {
     };
     let actualizados = [...packsComprados, nuevoPack];
     setPacksComprados(actualizados);
-    localStorage.setItem('ganado_packs_comprados', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_packs_comprados_v9', JSON.stringify(actualizados));
 
     let mensajePedido = `*📦 SOLICITUD DE PACK DE CARAVANAS*\n`;
     mensajePedido += `Establecimiento: ${establecimientoActual.nombre}\n`;
@@ -246,7 +229,7 @@ export default function App() {
 
     let actualizadas = [nuevaVacuna, ...vacunaciones];
     setVacunaciones(actualizadas);
-    localStorage.setItem('ganado_vacunaciones', JSON.stringify(actualizadas));
+    localStorage.setItem('ganado_vacunaciones_v9', JSON.stringify(actualizadas));
     setLoteVacuna('');
     alert(`💉 Vacunación registrada correctamente.`);
   };
@@ -269,136 +252,6 @@ export default function App() {
       }
     });
     setLoteTemporal(acumuladoTemp);
-  };
-
-  const procesarTextoVozTemporal = (texto) => {
-    if (!texto.trim()) return;
-    const tokens = texto.toLowerCase().split(/[\s,;\n]+/);
-    let cat = categoriaGlobal;
-    let items = [];
-
-    tokens.forEach((token) => {
-      if (token.includes('ternera')) cat = 'Terneras';
-      else if (token.includes('ternero')) cat = 'Terneros';
-      else if (token.includes('novillito')) cat = 'Novillitos';
-      else if (token.includes('novillo')) cat = 'Novillos';
-      else if (token.includes('vaquillona')) cat = 'Vaquillonas';
-      else if (token.includes('vaca')) cat = 'Vacas';
-      else if (token.includes('torito')) cat = 'Toritos';
-      else if (token.includes('toro')) cat = 'Toros';
-
-      let numMatch = token.match(/\d{1,5}/);
-      if (numMatch) {
-        items.push({ numero: numMatch[0], categoria: cat });
-      }
-    });
-
-    if (items.length > 0) {
-      agregarAlLoteTemporal(items);
-    }
-  };
-
-  const iniciarDictadoVozContinuo = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Su navegador no soporta dictado por voz.');
-      return;
-    }
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-AR';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    EstaDictando(true);
-    recognition.onresult = (event) => {
-      let tFinal = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) tFinal += event.results[i][0].transcript + ' ';
-      }
-      if (tFinal) {
-        setBloqueTexto(prev => (prev + ' ' + tFinal).trim());
-        procesarTextoVozTemporal(tFinal);
-      }
-    };
-    recognition.onerror = () => EstaDictando(false);
-    recognition.onend = () => EstaDictando(false);
-
-    window.recognitionInstance = recognition;
-    recognition.start();
-  };
-
-  const finalizarDictadoVoz = () => {
-    if (window.recognitionInstance) window.recognitionInstance.stop();
-    EstaDictando(false);
-  };
-
-  const conectarBastonBluetooth = async () => {
-    if (!navigator.bluetooth) {
-      alert('Su navegador no soporta conexión Bluetooth Web.');
-      return;
-    }
-    try {
-      const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: ['generic_access', 'battery_service']
-      });
-      await device.gatt.connect();
-      setDispositivoBaston(device.name || 'Bastón Lector');
-      setConectadoBluetooth(true);
-      alert(`✅ Conectado con: ${device.name || 'Bastón Lector'}`);
-    } catch (error) {
-      alert('No se pudo completar la conexión Bluetooth.');
-    }
-  };
-
-  const iniciarEscaneoRealCamara = () => {
-    if (!window.Html5Qrcode) {
-      alert('El módulo de cámara se está cargando. Intente nuevamente.');
-      return;
-    }
-    setEscaneandoCamara(true);
-    setTimeout(() => {
-      if (!scannerRef.current) {
-        scannerRef.current = new window.Html5Qrcode("reader-camara-real");
-      }
-      scannerRef.current.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          let numMatch = decodedText.match(/\d{1,15}/);
-          if (numMatch) {
-            agregarAlLoteTemporal([{ numero: numMatch[0], categoria: categoriaGlobal }]);
-          }
-        },
-        () => {}
-      ).catch(() => {
-        alert('No se pudo acceder a la cámara trasera.');
-        setEscaneandoCamara(false);
-      });
-    }, 300);
-  };
-
-  const detenerEscaneoRealCamara = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (e) {}
-    }
-    setEscaneandoCamara(false);
-  };
-
-  const procesarFotoPlanillaReal = (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    alert(`📸 Procesando imagen "${archivo.name}"...`);
-    setTimeout(() => {
-      let itemsDetectados = [
-        { numero: '78910', categoria: categoriaGlobal },
-        { numero: '78911', categoria: categoriaGlobal }
-      ];
-      agregarAlLoteTemporal(itemsDetectados);
-    }, 1000);
   };
 
   const agregarRangoTemporal = () => {
@@ -702,57 +555,37 @@ export default function App() {
               <h3 style={{ color: '#81c784', marginTop: 0 }}>⚡ Métodos de Captura en Manga</h3>
               
               <div style={{ background: '#111', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.8rem', border: '1px solid #333' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ color: '#00e676', fontSize: '0.9rem' }}>📡 Bastón Lector (Bluetooth)</strong>
-                    <div style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                      {conectadoBluetooth ? `Conectado a: ${dispositivoBaston}` : 'Sin bastón vinculado'}
-                    </div>
-                  </div>
-                  {!conectadoBluetooth ? (
-                    <button style={{ background: '#0288d1', color: '#fff', border: 'none', padding: '0.5rem 0.8rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }} onClick={conectarBastonBluetooth}>
-                      Vincular Bastón
-                    </button>
-                  ) : (
-                    <span style={{ color: '#00e676', fontWeight: 'bold', fontSize: '0.8rem' }}>Conectado OK</span>
-                  )}
+                <label style={{ color: '#aaa', fontSize: '0.85rem', display: 'block', marginBottom: '0.3rem' }}>Carga Manual / Lector de Caravana (Escribir o Pistolear N°):</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    id="input-caravana-rapida" 
+                    placeholder="Ej: 12345" 
+                    style={styles.input} 
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        agregarAlLoteTemporal([{ numero: e.target.value.trim(), categoria: categoriaGlobal }]);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  <button 
+                    style={{ background: '#2e7d32', color: '#fff', border: 'none', padding: '0 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    onClick={() => {
+                      let inp = document.getElementById('input-caravana-rapida');
+                      if (inp && inp.value.trim()) {
+                        agregarAlLoteTemporal([{ numero: inp.value.trim(), categoria: categoriaGlobal }]);
+                        inp.value = '';
+                      }
+                    }}
+                  >
+                    Agregar
+                  </button>
                 </div>
               </div>
 
-              <div style={{ background: '#111', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.8rem', border: '1px solid #333', textAlign: 'center' }}>
-                <div id="reader-camara-real" style={{ width: '100%', maxWidth: '350px', margin: '0 auto', display: escaneandoCamara ? 'block' : 'none' }}></div>
-                {!escaneandoCamara ? (
-                  <button style={{ ...styles.btnMain, backgroundColor: '#7b1fa2', fontSize: '0.9rem', marginTop: 0 }} onClick={iniciarEscaneoRealCamara}>
-                    📷 Activar Cámara (Escáner QR / Barras)
-                  </button>
-                ) : (
-                  <button style={{ ...styles.btnMain, backgroundColor: '#c62828', fontSize: '0.9rem', marginTop: '0.5rem' }} onClick={detenerEscaneoRealCamara}>
-                    ⏹️ Apagar Cámara
-                  </button>
-                )}
-              </div>
-
-              <div style={{ marginBottom: '0.8rem' }}>
-                <label style={{ ...styles.btnMain, backgroundColor: '#c2185b', fontSize: '0.9rem', textAlign: 'center', display: 'block', lineHeight: '1.2rem', cursor: 'pointer', boxSizing: 'border-box' }}>
-                  🖼️ Subir Foto de Planilla Escrita
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={procesarFotoPlanillaReal} />
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '0.8rem' }}>
-                {!estaDictando ? (
-                  <button style={{ ...styles.btnMain, backgroundColor: '#0277bd', fontSize: '0.9rem', marginTop: 0 }} onClick={iniciarDictadoVozContinuo}>
-                    🎙️ Iniciar Dictado por Voz (Decir números de caravana)
-                  </button>
-                ) : (
-                  <button style={{ ...styles.btnMain, backgroundColor: '#c62828', fontSize: '0.9rem', marginTop: 0 }} onClick={finalizarDictadoVoz}>
-                    ⏹️ Detener Dictado por Voz (Escuchando...)
-                  </button>
-                )}
-              </div>
-
               <div style={{ marginTop: '1rem', borderTop: '1px solid #444', paddingTop: '1rem' }}>
-                <label style={{ color: '#aaa', fontSize: '0.85rem' }}>O Carga por Rango Correlativo:</label>
+                <label style={{ color: '#aaa', fontSize: '0.85rem' }}>Carga por Rango Correlativo:</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1rem' }}>
                   <input type="number" placeholder="Desde N°" value={rangoDesde} onChange={(e) => setRangoDesde(e.target.value)} style={styles.input} />
                   <input type="number" placeholder="Hasta N°" value={RangoHasta} onChange={(e) => setRangoHasta(e.target.value)} style={styles.input} />
@@ -967,7 +800,7 @@ export default function App() {
               </select>
             </div>
 
-            <div style={{ background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem' }}>
+            <div style={{ background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem' }, {background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem'}}>
               <strong style={{ color: '#81c784' }}>🏦 Datos para Abonar el Plan {planSuscripcionSeleccionado} ({obtenerPrecioPlan(planSuscripcionSeleccionado)}):</strong>
               <p style={{ margin: '0.5rem 0 0.2rem 0', fontSize: '0.9rem' }}>Banco: <b>Banco Provincia</b></p>
               <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}>Alias: <b style={{ color: '#ffb74d' }}>{aliasBco}</b></p>
