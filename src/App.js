@@ -36,7 +36,7 @@ export default function App() {
   };
 
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_establecimientos_v6');
+    const saved = localStorage.getItem('ganado_establecimientos_v7');
     if (saved) return JSON.parse(saved);
     return [
       {
@@ -87,7 +87,7 @@ export default function App() {
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v6', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v7', JSON.stringify(actualizados));
     setEditandoEstablecimiento(false);
     alert('✅ Datos guardados correctamente.');
   };
@@ -108,7 +108,7 @@ export default function App() {
 
     let actualizados = [...establecimientos, nuevoEst];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v6', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v7', JSON.stringify(actualizados));
     setEstacionActivaId(nuevoEst.id);
     localStorage.setItem('ganado_estacion_activa_id', nuevoEst.id);
     alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado.`);
@@ -126,13 +126,13 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  const claveReg = `ganado_registros_v6_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_registros_v7_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_historico_v6_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_historico_v7_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
@@ -140,8 +140,8 @@ export default function App() {
 
   useEffect(() => {
     const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
-    const cReg = `ganado_registros_v6_${idKey}`;
-    const cHist = `ganado_historico_v6_${idKey}`;
+    const cReg = `ganado_registros_v7_${idKey}`;
+    const cHist = `ganado_historico_v7_${idKey}`;
     const regSaved = localStorage.getItem(cReg);
     const histSaved = localStorage.getItem(cHist);
     setRegistrosDiarios(regSaved ? JSON.parse(regSaved) : []);
