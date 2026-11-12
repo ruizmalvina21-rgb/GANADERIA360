@@ -9,10 +9,10 @@ export default function App() {
   const [tab, setTab] = useState('diario');
 
   const [fechaRegistroApp] = useState(() => {
-    let saved = localStorage.getItem('ganado_fecha_app_v12');
+    let saved = localStorage.getItem('ganado_fecha_app_v14');
     if (!saved) {
       saved = new Date().toISOString();
-      localStorage.setItem('ganado_fecha_app_v12', saved);
+      localStorage.setItem('ganado_fecha_app_v14', saved);
     }
     return new Date(saved);
   });
@@ -34,14 +34,14 @@ export default function App() {
   };
 
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_ests_v12');
+    const saved = localStorage.getItem('ganado_ests_v14');
     return saved ? JSON.parse(saved) : [
       { id: 1, nombre: 'Mi Establecimiento', cuit: '', renspa: '', stockInicial: 0, prefijo: '0001234567' }
     ];
   });
 
   const [estacionActivaId, setEstacionActivaId] = useState(() => {
-    const saved = localStorage.getItem('ganado_est_activa_v12');
+    const saved = localStorage.getItem('ganado_est_activa_v14');
     return saved ? Number(saved) : 1;
   });
 
@@ -59,7 +59,7 @@ export default function App() {
     setTRenspa(establecimientoActual.renspa);
     setTStock(establecimientoActual.stockInicial);
     setTPrefijo(establecimientoActual.prefijo);
-  }, [estacionActivaId, establecimientoActual]);
+  }, [estacionActivaId, establecimientoActual.id]);
 
   const guardarEstablecimiento = () => {
     const actualizados = establecimientos.map(est => {
@@ -69,16 +69,16 @@ export default function App() {
           nombre: tNombre.trim() || 'Establecimiento Sin Nombre',
           cuit: tCuit.trim(),
           renspa: tRenspa.trim(),
-          stockInicial: parseInt(tStock) || 0,
+          stockInicial: parseInt(tStock, 10) || 0,
           prefijo: tPrefijo.trim() || '0000000000'
         };
       }
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_ests_v12', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_ests_v14', JSON.stringify(actualizados));
     setEditandoEst(false);
-    alert('✅ Datos guardados correctamente.');
+    alert('Datos guardados correctamente.');
   };
 
   const agregarNuevoRenspa = () => {
@@ -97,22 +97,22 @@ export default function App() {
 
     const actualizados = [...establecimientos, nuevo];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_ests_v12', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_ests_v14', JSON.stringify(actualizados));
     setEstacionActivaId(nuevo.id);
-    localStorage.setItem('ganado_est_activa_v12', nuevo.id);
+    localStorage.setItem('ganado_est_activa_v14', String(nuevo.id));
   };
 
   const [operacionActual, setOperacionActual] = useState('Nacimiento');
   const [categoriaGlobal, setCategoriaGlobal] = useState('Terneros');
   const obtenerSexo = (cat) => ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
 
-  const claveReg = `ganado_regs_v12_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_regs_v14_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registros, setRegistros] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_hist_v12_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_hist_v14_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
@@ -120,16 +120,15 @@ export default function App() {
 
   useEffect(() => {
     const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
-    setRegistros(JSON.parse(localStorage.getItem(`ganado_regs_v12_${idKey}`) || '[]'));
-    setArchivoHistorico(JSON.parse(localStorage.getItem(`ganado_hist_v12_${idKey}`) || '[]'));
-  }, [estacionActivaId, establecimientoActual]);
+    setRegistros(JSON.parse(localStorage.getItem(`ganado_regs_v14_${idKey}`) || '[]'));
+    setArchivoHistorico(JSON.parse(localStorage.getItem(`ganado_hist_v14_${idKey}`) || '[]'));
+  }, [estacionActivaId, establecimientoActual.nombre, establecimientoActual.renspa]);
 
-  const [filtroHist, setFiltroHist] = useState('TODAS');
   const [loteTemp, setLoteTemp] = useState([]);
   const [caravanaInput, setCaravanaInput] = useState('');
   const [rangoDesde, setRangoDesde] = useState('');
   const [rangoHasta, setRangoHasta] = useState('');
-  const [packs, setPacks] = useState(() => JSON.parse(localStorage.getItem('ganado_packs_v12') || '[]'));
+  const [packs, setPacks] = useState(() => JSON.parse(localStorage.getItem('ganado_packs_v14') || '[]'));
   const [cantPack, setCantPack] = useState(100);
 
   const totalCompradas = packs.reduce((acc, p) => acc + p.cantidad, 0);
@@ -152,11 +151,11 @@ export default function App() {
   };
 
   const agregarRango = () => {
-    const d = parseInt(rangoDesde);
-    const h = parseInt(rangoHasta);
+    const d = parseInt(rangoDesde, 10);
+    const h = parseInt(rangoHasta, 10);
     if (isNaN(d) || isNaN(h) || d > h) { alert('Rango inválido'); return; }
     let items = [];
-    for (let i = d; i <= h; i++) items.push({ numero: i.toString(), categoria: categoriaGlobal });
+    for (let i = d; i <= h; i++) items.push({ numero: String(i), categoria: categoriaGlobal });
     agregarAlLote(items);
     setRangoDesde(''); setRangoHasta('');
   };
@@ -207,12 +206,12 @@ export default function App() {
     setRegistros(nuevosRegs);
     localStorage.setItem(claveReg, JSON.stringify(nuevosRegs));
     setLoteTemp([]);
-    alert(`📁 Operación guardada con éxito (${guardados.length} cabezas).`);
+    alert(`Operación guardada con éxito (${guardados.length} cabezas).`);
   };
 
   const exportarExcel = (itemsParaExportar) => {
     if (itemsParaExportar.length === 0) { alert('No hay datos para exportar.'); return; }
-    let html = '<table border="1"><tr><th>Caravana Oficial (15 Digitos)</th><th>Categoría</th><th>Sexo</th><th>Operación</th><th>Fecha</th><th>Estado</th></tr>';
+    let html = '<table border="1"><tr><th>Caravana Oficial</th><th>Categoría</th><th>Sexo</th><th>Operación</th><th>Fecha</th><th>Estado</th></tr>';
     itemsParaExportar.forEach(r => {
       html += `<tr><td style="mso-number-format:'\@';">${r.caravana}</td><td>${r.categoria}</td><td>${r.sexo}</td><td>${r.operacion}</td><td>${r.fecha}</td><td>${r.motivoAlerta || 'OK'}</td></tr>`;
     });
@@ -230,7 +229,7 @@ export default function App() {
     const totalSal = registros.filter(r => r.operacion === 'Venta / Salida' && !r.esExcepcion).length;
     const stockActual = (Number(establecimientoActual.stockInicial) || 0) + totalEnt - totalSal;
 
-    let txt = `*REPORTE INSTITUCIONAL DE HACIENDA*\n`;
+    let txt = `REPORTE INSTITUCIONAL DE HACIENDA\n`;
     txt += `Campo: ${establecimientoActual.nombre} | RENSPA: ${establecimientoActual.renspa || 'S/N'}\n`;
     txt += `Stock Actual: ${stockActual} cabezas | Identificados: ${totalUsadas}\n\n`;
     registros.slice(-10).forEach(r => {
@@ -260,16 +259,16 @@ export default function App() {
       <header style={styles.header}>
         <h1 style={{ margin: 0, fontSize: '1.2rem' }}>{NOMBRE_APLICACION}</h1>
         <small style={{ color: '#a5d6a7' }}>
-          Campo: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | ⏳ Prueba: <b>{diasPruebaRestantes} días</b>
+          Campo: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | Prueba: <b>{diasPruebaRestantes} días</b>
         </small>
       </header>
 
       <nav style={styles.nav}>
-        <button style={styles.navBtn(tab === 'diario')} onClick={() => setTab('diario')}>📋 Manga</button>
-        <button style={styles.navBtn(tab === 'archivo')} onClick={() => setTab('archivo')}>📁 Archivo</button>
-        <button style={styles.navBtn(tab === 'stock')} onClick={() => setTab('stock')}>🐂 Stock</button>
-        <button style={styles.navBtn(tab === 'packs')} onClick={() => setTab('packs')}>📦 Packs</button>
-        <button style={styles.navBtn(tab === 'suscripcion')} onClick={() => setTab('suscripcion')}>💳 Suscripción</button>
+        <button style={styles.navBtn(tab === 'diario')} onClick={() => setTab('diario')}>Manga</button>
+        <button style={styles.navBtn(tab === 'archivo')} onClick={() => setTab('archivo')}>Archivo</button>
+        <button style={styles.navBtn(tab === 'stock')} onClick={() => setTab('stock')}>Stock</button>
+        <button style={styles.navBtn(tab === 'packs')} onClick={() => setTab('packs')}>Packs</button>
+        <button style={styles.navBtn(tab === 'suscripcion')} onClick={() => setTab('suscripcion')}>Suscripción</button>
       </nav>
 
       <div style={styles.body}>
@@ -277,16 +276,16 @@ export default function App() {
           <div>
             <div style={{ ...styles.card, border: '2px solid #0288d1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ color: '#81c784', margin: 0 }}>🏢 Establecimiento Activo</h3>
+                <h3 style={{ color: '#81c784', margin: 0 }}>Establecimiento Activo</h3>
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <button onClick={agregarNuevoRenspa} style={{ background: '#0288d1', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>➕ Nuevo Campo</button>
+                  <button onClick={agregarNuevoRenspa} style={{ background: '#0288d1', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Nuevo Campo</button>
                   <button onClick={() => setEditandoEst(!editandoEst)} style={{ background: '#333', color: '#fff', border: '1px solid #666', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}>{editandoEst ? 'Cerrar' : 'Configurar'}</button>
                 </div>
               </div>
 
               {establecimientos.length > 1 && (
                 <div style={{ marginTop: '0.8rem' }}>
-                  <select value={estacionActivaId} onChange={(e) => { setEstacionActivaId(Number(e.target.value)); localStorage.setItem('ganado_est_activa_v12', e.target.value); }} style={styles.select}>
+                  <select value={estacionActivaId} onChange={(e) => { setEstacionActivaId(Number(e.target.value)); localStorage.setItem('ganado_est_activa_v14', e.target.value); }} style={styles.select}>
                     {establecimientos.map(est => <option key={est.id} value={est.id}>{est.nombre} (RENSPA: {est.renspa || 'S/N'})</option>)}
                   </select>
                 </div>
@@ -307,7 +306,7 @@ export default function App() {
                   <input type="number" value={tStock} onChange={(e) => setTStock(e.target.value)} style={styles.input} />
                   <label style={{ fontSize: '0.75rem', color: '#aaa' }}>Prefijo de Caravana (10 dígitos):</label>
                   <input type="text" maxLength={10} value={tPrefijo} onChange={(e) => setTPrefijo(e.target.value)} style={styles.input} />
-                  <button onClick={guardarEstablecimiento} style={{ ...styles.btn, backgroundColor: '#2e7d32' }}>💾 Guardar Datos</button>
+                  <button onClick={guardarEstablecimiento} style={{ ...styles.btn, backgroundColor: '#2e7d32' }}>Guardar Datos</button>
                 </div>
               )}
             </div>
@@ -326,7 +325,7 @@ export default function App() {
             </div>
 
             <div style={{ ...styles.card, border: '2px solid #0277bd' }}>
-              <h3 style={{ color: '#81c784', marginTop: 0 }}>⚡ Ingreso en Manga</h3>
+              <h3 style={{ color: '#81c784', marginTop: 0 }}>Ingreso en Manga</h3>
               <label style={{ fontSize: '0.85rem', color: '#aaa' }}>Caravana Individual (Escribir y Enter o Agregar):</label>
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                 <input type="text" placeholder="Ej: 12345" value={caravanaInput} onChange={(e) => setCaravanaInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && caravanaInput.trim()) { agregarAlLote([{ numero: caravanaInput.trim() }]); setCaravanaInput(''); } }} style={{ ...styles.input, margin: 0 }} />
@@ -338,24 +337,24 @@ export default function App() {
                 <input type="number" placeholder="Desde N°" value={rangoDesde} onChange={(e) => setRangoDesde(e.target.value)} style={{ ...styles.input, margin: 0 }} />
                 <input type="number" placeholder="Hasta N°" value={rangoHasta} onChange={(e) => setRangoHasta(e.target.value)} style={{ ...styles.input, margin: 0 }} />
               </div>
-              <button onClick={agregarRango} style={{ ...styles.btn, backgroundColor: '#f57c00', color: '#000' }}>➕ Agregar Rango al Lote</button>
+              <button onClick={agregarRango} style={{ ...styles.btn, backgroundColor: '#f57c00', color: '#000' }}>Agregar Rango al Lote</button>
             </div>
 
             {loteTemp.length > 0 && (
               <div style={{ ...styles.card, border: '2px solid #ffb74d', background: '#1c1b18' }}>
-                <h3 style={{ color: '#ffb74d', marginTop: 0 }}>⚠️ Lote en Preparación ({loteTemp.length} animales)</h3>
+                <h3 style={{ color: '#ffb74d', marginTop: 0 }}>Lote en Preparación ({loteTemp.length} animales)</h3>
                 <div style={{ maxHeight: '150px', overflowY: 'auto', background: '#111', padding: '0.5rem', borderRadius: '6px', marginBottom: '1rem' }}>
                   {loteTemp.map((i, idx) => (
                     <div key={i.id} style={{ fontSize: '0.85rem', padding: '0.3rem 0', borderBottom: '1px solid #333' }}>#{idx + 1} — N° <b style={{ color: '#ffb74d' }}>{i.numero}</b> ({i.categoria} - {i.sexo})</div>
                   ))}
                 </div>
-                <button onClick={confirmarLote} style={{ ...styles.btn, backgroundColor: '#2e7d32', fontSize: '1.05rem' }}>💾 Confirmar y Guardar Lote</button>
-                <button onClick={() => setLoteTemp([])} style={{ ...styles.btn, backgroundColor: '#c62828', marginTop: '0.4rem' }}>❌ Descartar</button>
+                <button onClick={confirmarLote} style={{ ...styles.btn, backgroundColor: '#2e7d32', fontSize: '1.05rem' }}>Confirmar y Guardar Lote</button>
+                <button onClick={() => setLoteTemp([])} style={{ ...styles.btn, backgroundColor: '#c62828', marginTop: '0.4rem' }}>Descartar</button>
               </div>
             )}
 
             <div style={styles.card}>
-              <h3 style={{ color: '#81c784', marginTop: 0 }}>📋 Listado Definitivo ({registros.length})</h3>
+              <h3 style={{ color: '#81c784', marginTop: 0 }}>Listado Definitivo ({registros.length})</h3>
               <div style={{ maxHeight: '180px', overflowY: 'auto', marginBottom: '1rem' }}>
                 {registros.length === 0 ? <p style={{ color: '#aaa' }}>Sin registros guardados.</p> : registros.slice().reverse().map((r, idx) => (
                   <div key={r.id} style={{ background: r.esExcepcion ? '#3e2723' : '#252525', padding: '0.5rem', marginBottom: '0.3rem', borderRadius: '6px', fontSize: '0.85rem' }}>
@@ -364,9 +363,9 @@ export default function App() {
                 ))}
               </div>
               <div style={styles.grid3}>
-                <button onClick={() => exportarExcel(registros)} style={{ ...styles.btn, backgroundColor: '#2e7d32', marginTop: 0 }}>📊 Excel</button>
-                <button onClick={() => window.print()} style={{ ...styles.btn, backgroundColor: '#d84315', marginTop: 0 }}>📄 PDF</button>
-                <button onClick={enviarWhatsApp} style={{ ...styles.btn, backgroundColor: '#25d366', color: '#000', marginTop: 0 }}>📲 WhatsApp</button>
+                <button onClick={() => exportarExcel(registros)} style={{ ...styles.btn, backgroundColor: '#2e7d32', marginTop: 0 }}>Excel</button>
+                <button onClick={() => window.print()} style={{ ...styles.btn, backgroundColor: '#d84315', marginTop: 0 }}>PDF</button>
+                <button onClick={enviarWhatsApp} style={{ ...styles.btn, backgroundColor: '#25d366', color: '#000', marginTop: 0 }}>WhatsApp</button>
               </div>
             </div>
           </div>
@@ -374,12 +373,12 @@ export default function App() {
 
         {tab === 'archivo' && (
           <div style={styles.card}>
-            <h3 style={{ color: '#81c784', marginTop: 0 }}>📁 Archivo Histórico</h3>
+            <h3 style={{ color: '#81c784', marginTop: 0 }}>Archivo Histórico</h3>
             {archivoHistorico.length === 0 ? <p style={{ color: '#aaa' }}>No hay carpetas archivadas.</p> : archivoHistorico.map(c => (
               <div key={c.id} style={{ background: '#252525', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.6rem', borderLeft: '4px solid #0288d1' }}>
                 <strong style={{ color: '#ffb74d' }}>{c.titulo}</strong> <span style={{ fontSize: '0.75rem', color: '#aaa', float: 'right' }}>{c.fecha}</span>
                 <div style={{ fontSize: '0.85rem', margin: '0.4rem 0' }}>Total: <b>{c.cantidad} cabezas</b></div>
-                <button onClick={() => exportarExcel(c.items)} style={{ background: '#2e7d32', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>📊 Descargar Excel de esta carpeta</button>
+                <button onClick={() => exportarExcel(c.items)} style={{ background: '#2e7d32', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Descargar Excel de esta carpeta</button>
               </div>
             ))}
           </div>
@@ -387,7 +386,7 @@ export default function App() {
 
         {tab === 'stock' && (
           <div style={styles.card}>
-            <h3 style={{ color: '#81c784', marginTop: 0 }}>🐂 Estado de Stock General</h3>
+            <h3 style={{ color: '#81c784', marginTop: 0 }}>Estado de Stock General</h3>
             <p>Stock Inicial Configurado: <b>{establecimientoActual.stockInicial || 0} cabezas</b></p>
             <p>Stock Actual Calculado: <b style={{ color: '#81c784', fontSize: '1.4rem' }}>{(Number(establecimientoActual.stockInicial) || 0) + registros.filter(r => ['Nacimiento', 'Alta en Manga'].includes(r.operacion) && !r.esExcepcion).length - registros.filter(r => r.operacion === 'Venta / Salida' && !r.esExcepcion).length} cabezas</b></p>
             <p>Animales Identificados en Manga: <b>{totalUsadas} un.</b></p>
@@ -396,7 +395,7 @@ export default function App() {
 
         {tab === 'packs' && (
           <div style={styles.card}>
-            <h3 style={{ color: '#81c784', marginTop: 0 }}>📦 Packs de Caravanas</h3>
+            <h3 style={{ color: '#81c784', marginTop: 0 }}>Packs de Caravanas</h3>
             <p>Disponibles en Stock: <b style={{ color: '#00e676', fontSize: '1.2rem' }}>{caravanasDisponibles} un.</b></p>
             <select value={cantPack} onChange={(e) => setCantPack(Number(e.target.value))} style={styles.select}>
               <option value={50}>Pack de 50 unidades</option>
@@ -407,15 +406,15 @@ export default function App() {
               const p = { id: Date.now(), cantidad: cantPack, fecha: new Date().toLocaleDateString() };
               const act = [...packs, p];
               setPacks(act);
-              localStorage.setItem('ganado_packs_v12', JSON.stringify(act));
-              alert('✅ Pack acreditado correctamente.');
-            }} style={{ ...styles.btn, backgroundColor: '#0288d1' }}>🛒 Simular Acreditación de Pack</button>
+              localStorage.setItem('ganado_packs_v14', JSON.stringify(act));
+              alert('Pack acreditado correctamente.');
+            }} style={{ ...styles.btn, backgroundColor: '#0288d1' }}>Simular Acreditación de Pack</button>
           </div>
         )}
 
         {tab === 'suscripcion' && (
-          <div style={{ ...styles.card, textAlign: 'center', border: '2px solid #f57c00' }}>
-            <h3 style={{ color: '#ffb74d', marginTop: 0 }}>💳 Estado de Suscripción</h3>
+          <div style={{ background: '#1e1e1e', borderRadius: '12px', padding: '1.2rem', marginBottom: '1rem', border: '2px solid #f57c00', textAlign: 'center' }}>
+            <h3 style={{ color: '#ffb74d', marginTop: 0 }}>Estado de Suscripción</h3>
             <div style={{ background: '#1b381e', padding: '1rem', borderRadius: '8px', margin: '1rem 0' }}>
               <div style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#81c784' }}>{diasPruebaRestantes} Días Restantes</div>
               <small>Prueba gratuita activa</small>
@@ -431,7 +430,7 @@ export default function App() {
               <div>CVU: <b style={{ color: '#ffb74d' }}>{cvuBco}</b></div>
             </div>
             <button onClick={() => window.open(`https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(`Hola, quiero abonar el plan ${planSuscripcion} (${obtenerPrecio(planSuscripcion)}) para ${establecimientoActual.nombre}`)}`, '_blank')} style={{ ...styles.btn, backgroundColor: '#25d366', color: '#000' }}>
-              📲 Notificar Pago por WhatsApp
+              Notificar Pago por WhatsApp
             </button>
           </div>
         )}
