@@ -35,9 +35,9 @@ export default function App() {
     return '';
   };
 
-  // MULTIPLES ESTABLECIMIENTOS / RENSPAS (SIN PREFIJOS OBLIGATORIOS)
+  // MULTIPLES RENSPAS / ESTABLECIMIENTOS (SIN DATOS PREFIJADOS NI LOTES)
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_establecimientos_v3');
+    const saved = localStorage.getItem('ganado_establecimientos_v4');
     if (saved) return JSON.parse(saved);
     return [
       {
@@ -88,15 +88,15 @@ export default function App() {
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v3', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v4', JSON.stringify(actualizados));
     setEditandoEstablecimiento(false);
-    alert('✅ Datos del RENSPA / Establecimiento guardados correctamente.');
+    alert('✅ Datos guardados correctamente.');
   };
 
   const agregarNuevoRenspaEstablecimiento = () => {
     let nombreNuevo = prompt('Ingrese el nombre del nuevo Establecimiento / Campo:');
     if (!nombreNuevo) return;
-    let renspaNuevo = prompt('Ingrese el número de RENSPA (Ej: 03.xxx... o déjelo para completar después):') || '';
+    let renspaNuevo = prompt('Ingrese el número de RENSPA:') || '';
     
     let nuevoEst = {
       id: Date.now(),
@@ -109,10 +109,10 @@ export default function App() {
 
     let actualizados = [...establecimientos, nuevoEst];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v3', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v4', JSON.stringify(actualizados));
     setEstacionActivaId(nuevoEst.id);
     localStorage.setItem('ganado_estacion_activa_id', nuevoEst.id);
-    alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado y seleccionado.`);
+    alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado.`);
   };
 
   const seleccionarEstablecimiento = (id) => {
@@ -120,7 +120,6 @@ export default function App() {
     localStorage.setItem('ganado_estacion_activa_id', id);
   };
 
-  const [potreroActual, setPotreroActual] = useState('Lote Principal');
   const [operacionActual, setOperacionActual] = useState('Nacimiento');
   const [categoriaGlobal, setCategoriaGlobal] = useState('Terneros');
 
@@ -128,13 +127,13 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  const claveReg = `ganado_registros_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_registros_v4_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_historico_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_historico_v4_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
@@ -142,8 +141,8 @@ export default function App() {
 
   useEffect(() => {
     const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
-    const cReg = `ganado_registros_${idKey}`;
-    const cHist = `ganado_historico_${idKey}`;
+    const cReg = `ganado_registros_v4_${idKey}`;
+    const cHist = `ganado_historico_v4_${idKey}`;
     const regSaved = localStorage.getItem(cReg);
     const histSaved = localStorage.getItem(cHist);
     setRegistrosDiarios(regSaved ? JSON.parse(regSaved) : []);
@@ -455,7 +454,6 @@ export default function App() {
         operacion: operacionActual,
         categoria: item.categoria,
         sexo: item.sexo,
-        potrero: potreroActual,
         caravana: caravana15,
         fecha: fechaHoy,
         esExcepcion: esExcepcion || yaExiste || sinStockCaravana,
@@ -468,9 +466,8 @@ export default function App() {
 
     let nuevaCarpetaHistorica = {
       id: Date.now(),
-      titulo: `${operacionActual} - ${potreroActual}`,
+      titulo: `${operacionActual} - ${establecimientoActual.nombre}`,
       fecha: `${fechaHoy} a las ${horaActual}`,
-      potrero: potreroActual,
       operacion: operacionActual,
       cantidad: animalesGuardadosLote.length,
       items: animalesGuardadosLote
@@ -484,13 +481,13 @@ export default function App() {
     localStorage.setItem(claveReg, JSON.stringify(nuevosRegistros));
     setLoteTemporal([]);
     
-    alert(`📁 Lote guardado y archivado correctamente en el Histórico (${animalesGuardadosLote.length} cabezas).`);
+    alert(`📁 Operación guardada correctamente (${animalesGuardadosLote.length} cabezas).`);
   };
 
   const exportarCarpetaHistorica = (carpeta) => {
-    let htmlTabla = '<table border="1"><tr><th>Caravana Oficial (15 Digitos)</th><th>Categoria</th><th>Sexo</th><th>Operacion</th><th>Potrero</th><th>Fecha</th><th>Estado / Alerta</th></tr>';
+    let htmlTabla = '<table border="1"><tr><th>Caravana Oficial (15 Digitos)</th><th>Categoria</th><th>Sexo</th><th>Operacion</th><th>Fecha</th><th>Estado / Alerta</th></tr>';
     carpeta.items.forEach((r) => {
-      htmlTabla += `<tr><td style="mso-number-format:'\@';">${r.caravana}</td><td>${r.categoria}</td><td>${r.sexo}</td><td>${r.operacion}</td><td>${r.potrero}</td><td>${r.fecha}</td><td>${r.motivoAlerta || 'OK'}</td></tr>`;
+      htmlTabla += `<tr><td style="mso-number-format:'\@';">${r.caravana}</td><td>${r.categoria}</td><td>${r.sexo}</td><td>${r.operacion}</td><td>${r.fecha}</td><td>${r.motivoAlerta || 'OK'}</td></tr>`;
     });
     htmlTabla += '</table>';
 
@@ -498,14 +495,14 @@ export default function App() {
     let url = URL.createObjectURL(blob);
     let link = document.createElement('a');
     link.href = url;
-    link.download = `Lote_${carpeta.potrero.replace(/[^a-zA-Z0-9]/g, '_')}_${carpeta.fecha.split(' ')[0]}.xls`;
+    link.download = `Registro_${carpeta.fecha.split(' ')[0]}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const vaciarArchivoHistorico = () => {
-    if (window.confirm('¿Desea vaciar todo el archivo histórico de lotes para este establecimiento?')) {
+    if (window.confirm('¿Desea vaciar todo el archivo histórico para este RENSPA?')) {
       setArchivoHistorico([]);
       localStorage.removeItem(claveHist);
     }
@@ -513,9 +510,9 @@ export default function App() {
 
   const exportarExcelGeneral = () => {
     if (registrosDiarios.length === 0) { alert('No hay registros.'); return; }
-    let htmlTabla = '<table border="1"><tr><th>Caravana Oficial (15 Digitos)</th><th>Categoria</th><th>Sexo</th><th>Operacion</th><th>Potrero</th><th>Fecha</th><th>Estado / Alerta</th></tr>';
+    let htmlTabla = '<table border="1"><tr><th>Caravana Oficial (15 Digitos)</th><th>Categoria</th><th>Sexo</th><th>Operacion</th><th>Fecha</th><th>Estado / Alerta</th></tr>';
     registrosDiarios.forEach((r) => {
-      htmlTabla += `<tr><td style="mso-number-format:'\@';">${r.caravana}</td><td>${r.categoria}</td><td>${r.sexo}</td><td>${r.operacion}</td><td>${r.potrero}</td><td>${r.fecha}</td><td>${r.motivoAlerta || 'OK'}</td></tr>`;
+      htmlTabla += `<tr><td style="mso-number-format:'\@';">${r.caravana}</td><td>${r.categoria}</td><td>${r.sexo}</td><td>${r.operacion}</td><td>${r.fecha}</td><td>${r.motivoAlerta || 'OK'}</td></tr>`;
     });
     htmlTabla += '</table>';
 
@@ -600,7 +597,7 @@ export default function App() {
       <header style={styles.header}>
         <h1 style={{ margin: 0, fontSize: '1.2rem' }}>{NOMBRE_APLICACION}</h1>
         <small style={{ color: '#a5d6a7' }}>
-          Campo: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | ⏳ Prueba: <b>{diasPruebaRestantes} días</b>
+          Establecimiento: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | ⏳ Prueba: <b>{diasPruebaRestantes} días</b>
         </small>
       </header>
 
@@ -617,7 +614,7 @@ export default function App() {
       <div style={styles.body}>
         {tab === 'diario' && (
           <div>
-            {/* GESTION EXCLUSIVA DE MULTIPLES RENSPAS / ESTABLECIMIENTOS (SIN LOTES) */}
+            {/* GESTION DE ESTABLECIMIENTOS / RENSPAS (SIN LOTES) */}
             <div style={{ ...styles.card, border: '2px solid #0288d1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
                 <h3 style={{ color: '#81c784', margin: 0 }}>🏢 Establecimiento / RENSPA Activo</h3>
@@ -626,7 +623,7 @@ export default function App() {
                     style={{ background: '#0288d1', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
                     onClick={agregarNuevoRenspaEstablecimiento}
                   >
-                    ➕ Agregar más RENSPA
+                    ➕ Agregar RENSPA
                   </button>
                   <button 
                     style={{ background: '#333', color: '#fff', border: '1px solid #666', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -639,7 +636,7 @@ export default function App() {
 
               {establecimientos.length > 1 && (
                 <div style={{ marginBottom: '0.8rem' }}>
-                  <label style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', marginBottom: '0.2rem' }}>Cambiar de RENSPA / Establecimiento:</label>
+                  <label style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', marginBottom: '0.2rem' }}>Cambiar de Establecimiento / RENSPA:</label>
                   <select 
                     value={estacionActivaId} 
                     onChange={(e) => seleccionarEstablecimiento(Number(e.target.value))} 
@@ -655,7 +652,7 @@ export default function App() {
               {!editandoEstablecimiento ? (
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>
                   <div>Campo: <b>{establecimientoActual.nombre}</b></div>
-                  <div>RENSPA: <b style={{ color: '#ffb74d' }}>{establecimientoActual.renspa || 'Sin registrar (Completar en Configurar)'}</b></div>
+                  <div>RENSPA: <b style={{ color: '#ffb74d' }}>{establecimientoActual.renspa || 'Sin registrar (Haga clic en Configurar)'}</b></div>
                   <div>CUIT: <b>{establecimientoActual.cuit || 'Sin registrar'}</b></div>
                   <div>Stock Inicial Base: <b>{establecimientoActual.stockInicial || 0} cabezas</b> | Prefijo: <b>{establecimientoActual.prefijo}</b></div>
                 </div>
@@ -677,7 +674,7 @@ export default function App() {
                   <input type="text" maxLength={10} value={tempPrefijo} onChange={(e) => setTempPrefijo(e.target.value)} style={styles.input} />
 
                   <button style={{ ...styles.btnMain, backgroundColor: '#2e7d32', marginTop: '0.8rem' }} onClick={guardarEstablecimientoActual}>
-                    💾 Guardar Datos de este RENSPA
+                    💾 Guardar Datos del Establecimiento
                   </button>
                 </div>
               )}
@@ -800,10 +797,10 @@ export default function App() {
                 </div>
 
                 <button style={{ ...styles.btnMain, backgroundColor: '#2e7d32', fontSize: '1.1rem' }} onClick={confirmarYGuardarLote}>
-                  💾 Confirmar, Guardar y Archivar Lote
+                  💾 Confirmar, Guardar y Archivar
                 </button>
                 <button style={{ ...styles.btnMain, backgroundColor: '#c62828', marginTop: '0.4rem' }} onClick={() => setLoteTemporal([])}>
-                  ❌ Descartar Lote Temporal
+                  ❌ Descartar Temporal
                 </button>
               </div>
             )}
@@ -816,7 +813,7 @@ export default function App() {
               
               <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '1rem' }}>
                 {registrosDiarios.length === 0 ? (
-                  <p style={{ color: '#aaa' }}>Sin registros definitivos hoy para este RENSPA.</p>
+                  <p style={{ color: '#aaa' }}>Sin registros definitivos hoy para este establecimiento.</p>
                 ) : (
                   registrosDiarios.slice().reverse().map((r, idx) => (
                     <div key={r.id} style={styles.itemReg(r.esExcepcion)}>
@@ -839,7 +836,7 @@ export default function App() {
 
         {tab === 'archivo' && (
           <div style={styles.card}>
-            <h3 style={{ color: '#81c784', marginTop: 0 }}>📁 Carpeta de Archivo Histórico de Lotes</h3>
+            <h3 style={{ color: '#81c784', marginTop: 0 }}>📁 Archivo Histórico de Operaciones</h3>
             <p style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '1rem' }}>
               Registros guardados para <b>{establecimientoActual.nombre}</b> (RENSPA: {establecimientoActual.renspa || 'Sin registrar'}).
             </p>
@@ -858,7 +855,7 @@ export default function App() {
             </div>
 
             {archivoFiltrado.length === 0 ? (
-              <p style={{ color: '#aaa', textAlign: 'center', padding: '2rem 0' }}>No se encontraron lotes archivados con los filtros seleccionados.</p>
+              <p style={{ color: '#aaa', textAlign: 'center', padding: '2rem 0' }}>No se encontraron registros archivados.</p>
             ) : (
               <div>
                 <div style={{ maxHeight: '350px', overflowY: 'auto', marginBottom: '1rem' }}>
@@ -879,7 +876,7 @@ export default function App() {
                           style={{ background: '#2e7d32', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', marginTop: '0.3rem' }}
                           onClick={() => exportarCarpetaHistorica(carpeta)}
                         >
-                          📊 Descargar Lote en Excel (.xls)
+                          📊 Descargar en Excel (.xls)
                         </button>
                       </div>
                     );
