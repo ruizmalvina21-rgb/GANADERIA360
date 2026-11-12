@@ -35,19 +35,18 @@ export default function App() {
     return '';
   };
 
-  // MULTIPLES ESTABLECIMIENTOS / RENSPAS (OFFLINE-FIRST)
+  // MULTIPLES ESTABLECIMIENTOS / RENSPAS (SIN PREFIJOS OBLIGATORIOS)
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_establecimientos_v2');
+    const saved = localStorage.getItem('ganado_establecimientos_v3');
     if (saved) return JSON.parse(saved);
     return [
       {
         id: 1,
-        nombre: 'Establecimiento Principal',
+        nombre: 'Mi Establecimiento',
         cuit: '',
-        renspa: '03.123.0.00456/00',
+        renspa: '',
         stockInicial: 0,
-        prefijo: '0001234567',
-        potreros: ['Lote Principal', 'Potrero Bajo', 'Monte']
+        prefijo: '0001234567'
       }
     ];
   });
@@ -65,7 +64,6 @@ export default function App() {
   const [tempRenspa, setTempRenspa] = useState(establecimientoActual.renspa);
   const [tempStockInicial, setTempStockInicial] = useState(establecimientoActual.stockInicial);
   const [tempPrefijo, setTempPrefijo] = useState(establecimientoActual.prefijo);
-  const [nuevoPotreroInput, setNuevoPotreroInput] = useState('');
 
   useEffect(() => {
     setTempNombre(establecimientoActual.nombre);
@@ -81,8 +79,8 @@ export default function App() {
         return {
           ...est,
           nombre: tempNombre.trim() || 'Establecimiento Sin Nombre',
-          cuit: tempCuit.trim() || 'Sin CUIT',
-          renspa: tempRenspa.trim() || 'Sin RENSPA',
+          cuit: tempCuit.trim(),
+          renspa: tempRenspa.trim(),
           stockInicial: parseInt(tempStockInicial) || 0,
           prefijo: tempPrefijo.trim() || '0000000000'
         };
@@ -90,15 +88,15 @@ export default function App() {
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v2', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v3', JSON.stringify(actualizados));
     setEditandoEstablecimiento(false);
-    alert('✅ Datos del establecimiento actualizados correctamente.');
+    alert('✅ Datos del RENSPA / Establecimiento guardados correctamente.');
   };
 
-  const agregarNuevoEstablecimiento = () => {
-    let nombreNuevo = prompt('Ingrese el nombre del nuevo establecimiento / campo:');
+  const agregarNuevoRenspaEstablecimiento = () => {
+    let nombreNuevo = prompt('Ingrese el nombre del nuevo Establecimiento / Campo:');
     if (!nombreNuevo) return;
-    let renspaNuevo = prompt('Ingrese el RENSPA del establecimiento (Ej: 03.xxx...):') || 'Sin RENSPA';
+    let renspaNuevo = prompt('Ingrese el número de RENSPA (Ej: 03.xxx... o déjelo para completar después):') || '';
     
     let nuevoEst = {
       id: Date.now(),
@@ -106,16 +104,15 @@ export default function App() {
       cuit: '',
       renspa: renspaNuevo.trim(),
       stockInicial: 0,
-      prefijo: '0001234567',
-      potreros: ['Lote Principal']
+      prefijo: '0001234567'
     };
 
     let actualizados = [...establecimientos, nuevoEst];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v2', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v3', JSON.stringify(actualizados));
     setEstacionActivaId(nuevoEst.id);
     localStorage.setItem('ganado_estacion_activa_id', nuevoEst.id);
-    alert(`📁 Establecimiento "${nombreNuevo}" creado y seleccionado.`);
+    alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado y seleccionado.`);
   };
 
   const seleccionarEstablecimiento = (id) => {
@@ -123,50 +120,7 @@ export default function App() {
     localStorage.setItem('ganado_estacion_activa_id', id);
   };
 
-  const agregarPotreroAlEstablecimiento = () => {
-    if (!nuevoPotreroInput.trim()) return;
-    let potreroLimpio = nuevoPotreroInput.trim();
-    if (establecimientoActual.potreros.includes(potreroLimpio)) {
-      alert('Ese potrero ya existe.');
-      return;
-    }
-    let actualizados = establecimientos.map(est => {
-      if (est.id === establecimientoActual.id) {
-        return { ...est, potreros: [...est.potreros, potreroLimpio] };
-      }
-      return est;
-    });
-    setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v2', JSON.stringify(actualizados));
-    setNuevoPotreroInput('');
-  };
-
-  const eliminarPotreroDelEstablecimiento = (potreroARemover) => {
-    if (establecimientoActual.potreros.length <= 1) {
-      alert('Debe mantener al menos un potrero.');
-      return;
-    }
-    let actualizados = establecimientos.map(est => {
-      if (est.id === establecimientoActual.id) {
-        return { ...est, potreros: est.potreros.filter(p => p !== potreroARemover) };
-      }
-      return est;
-    });
-    setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v2', JSON.stringify(actualizados));
-    if (potreroActual === potreroARemover) {
-      setPotreroActual(actualizados.find(e => e.id === establecimientoActual.id).potreros[0]);
-    }
-  };
-
-  const [potreroActual, setPotreroActual] = useState(establecimientoActual.potreros[0] || 'Lote Principal');
-
-  useEffect(() => {
-    if (establecimientoActual && !establecimientoActual.potreros.includes(potreroActual)) {
-      setPotreroActual(establecimientoActual.potreros[0] || 'General');
-    }
-  }, [estacionActivaId]);
-
+  const [potreroActual, setPotreroActual] = useState('Lote Principal');
   const [operacionActual, setOperacionActual] = useState('Nacimiento');
   const [categoriaGlobal, setCategoriaGlobal] = useState('Terneros');
 
@@ -174,29 +128,29 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  const claveReg = `ganado_registros_${establecimientoActual.renspa.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_registros_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_historico_${establecimientoActual.renspa.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_historico_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    const cReg = `ganado_registros_${establecimientoActual.renspa.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    const cHist = `ganado_historico_${establecimientoActual.renspa.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
+    const cReg = `ganado_registros_${idKey}`;
+    const cHist = `ganado_historico_${idKey}`;
     const regSaved = localStorage.getItem(cReg);
     const histSaved = localStorage.getItem(cHist);
     setRegistrosDiarios(regSaved ? JSON.parse(regSaved) : []);
     setArchivoHistorico(histSaved ? JSON.parse(histSaved) : []);
-  }, [estacionActivaId, establecimientoActual.renspa]);
+  }, [estacionActivaId, establecimientoActual]);
 
   const [filtroOperacionHistorial, setFiltroOperacionHistorial] = useState('TODAS');
-  const [filtroPotreroHistorial, setFiltroPotreroHistorial] = useState('TODOS');
   const [loteTemporal, setLoteTemporal] = useState([]);
 
   const [packsComprados, setPacksComprados] = useState(() => {
@@ -249,7 +203,7 @@ export default function App() {
 
     let mensajePedido = `*📦 SOLICITUD DE PACK DE CARAVANAS*\n`;
     mensajePedido += `Establecimiento: ${establecimientoActual.nombre}\n`;
-    mensajePedido += `RENSPA: ${establecimientoActual.renspa}\n`;
+    mensajePedido += `RENSPA: ${establecimientoActual.renspa || 'Sin especificar'}\n`;
     mensajePedido += `Cantidad solicitada: ${cantidadPackSeleccionada} unidades\n\n`;
     mensajePedido += `🏦 *DATOS PARA EL PAGO:*\nAlias: ${aliasBco}\nCVU: ${cvuBco}`;
 
@@ -260,7 +214,7 @@ export default function App() {
     let precioSeleccionado = obtenerPrecioPlan(planSuscripcionSeleccionado);
     let mensajeSuscripcion = `*💳 SOLICITUD DE SUSCRIPCIÓN (${planSuscripcionSeleccionado.toUpperCase()})*\n`;
     mensajeSuscripcion += `Establecimiento: ${establecimientoActual.nombre}\n`;
-    mensajeSuscripcion += `RENSPA: ${establecimientoActual.renspa}\n\n`;
+    mensajeSuscripcion += `RENSPA: ${establecimientoActual.renspa || 'Sin especificar'}\n\n`;
     mensajeSuscripcion += `Deseo activar el plan *${planSuscripcionSeleccionado}* (${precioSeleccionado}) de ${NOMBRE_APLICACION}.\n`;
     mensajeSuscripcion += `🏦 *DATOS DE TRANSFERENCIA:* \nAlias: ${aliasBco}\nCVU: ${cvuBco}`;
 
@@ -287,7 +241,7 @@ export default function App() {
       tipo: tipoVacuna,
       lote: loteVacuna,
       establecimiento: establecimientoActual.nombre,
-      potrero: potreroActual,
+      renspa: establecimientoActual.renspa || 'Sin RENSPA',
       fecha: new Date().toLocaleDateString(),
       esBrucelosis: tipoVacuna.includes('Brucelosis')
     };
@@ -592,7 +546,7 @@ export default function App() {
 
   const generarTextoResumen = () => {
     let texto = `*REPORTE INSTITUCIONAL DE HACIENDA*\n`;
-    texto += `Establecimiento: ${establecimientoActual.nombre} | RENSPA: ${establecimientoActual.renspa} | Fecha: ${new Date().toLocaleDateString()}\n`;
+    texto += `Establecimiento: ${establecimientoActual.nombre} | RENSPA: ${establecimientoActual.renspa || 'Sin registrar'} | Fecha: ${new Date().toLocaleDateString()}\n`;
     texto += `Stock Actual: ${stockActualCabezas} cabezas | Identificados: ${animalesIdentificados}\n\n`;
     if (registrosDiarios.length > 0) {
       texto += `--- LISTADO CONSOLIDADO ---\n`;
@@ -609,8 +563,7 @@ export default function App() {
 
   const archivoFiltrado = archivoHistorico.filter((carpeta) => {
     const cumpleOp = filtroOperacionHistorial === 'TODAS' || carpeta.operacion === filtroOperacionHistorial;
-    const cumplePot = filtroPotreroHistorial === 'TODOS' || carpeta.potrero === filtroPotreroHistorial;
-    return cumpleOp && cumplePot;
+    return cumpleOp;
   });
 
   const styles = {
@@ -647,7 +600,7 @@ export default function App() {
       <header style={styles.header}>
         <h1 style={{ margin: 0, fontSize: '1.2rem' }}>{NOMBRE_APLICACION}</h1>
         <small style={{ color: '#a5d6a7' }}>
-          Campo: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa}</b> | ⏳ Prueba: <b>{diasPruebaRestantes} días</b>
+          Campo: <b>{establecimientoActual.nombre}</b> | RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | ⏳ Prueba: <b>{diasPruebaRestantes} días</b>
         </small>
       </header>
 
@@ -664,15 +617,16 @@ export default function App() {
       <div style={styles.body}>
         {tab === 'diario' && (
           <div>
+            {/* GESTION EXCLUSIVA DE MULTIPLES RENSPAS / ESTABLECIMIENTOS (SIN LOTES) */}
             <div style={{ ...styles.card, border: '2px solid #0288d1' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
                 <h3 style={{ color: '#81c784', margin: 0 }}>🏢 Establecimiento / RENSPA Activo</h3>
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                   <button 
                     style={{ background: '#0288d1', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
-                    onClick={agregarNuevoEstablecimiento}
+                    onClick={agregarNuevoRenspaEstablecimiento}
                   >
-                    ➕ Agregar Campo
+                    ➕ Agregar más RENSPA
                   </button>
                   <button 
                     style={{ background: '#333', color: '#fff', border: '1px solid #666', padding: '0.3rem 0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}
@@ -685,14 +639,14 @@ export default function App() {
 
               {establecimientos.length > 1 && (
                 <div style={{ marginBottom: '0.8rem' }}>
-                  <label style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', marginBottom: '0.2rem' }}>Seleccionar campo a administrar:</label>
+                  <label style={{ fontSize: '0.75rem', color: '#aaa', display: 'block', marginBottom: '0.2rem' }}>Cambiar de RENSPA / Establecimiento:</label>
                   <select 
                     value={estacionActivaId} 
                     onChange={(e) => seleccionarEstablecimiento(Number(e.target.value))} 
                     style={styles.select}
                   >
                     {establecimientos.map(est => (
-                      <option key={est.id} value={est.id}>{est.nombre} (RENSPA: {est.renspa})</option>
+                      <option key={est.id} value={est.id}>{est.nombre} (RENSPA: {est.renspa || 'Sin registrar'})</option>
                     ))}
                   </select>
                 </div>
@@ -701,8 +655,9 @@ export default function App() {
               {!editandoEstablecimiento ? (
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>
                   <div>Campo: <b>{establecimientoActual.nombre}</b></div>
-                  <div>RENSPA: <b>{establecimientoActual.renspa || 'Sin registrar'}</b> | CUIT: <b>{establecimientoActual.cuit || 'Sin registrar'}</b></div>
-                  <div>Stock Inicial Base: <b>{establecimientoActual.stockInicial || 0} cabezas</b> | Prefijo Caravana: <b style={{ color: '#ffb74d' }}>{establecimientoActual.prefijo}</b></div>
+                  <div>RENSPA: <b style={{ color: '#ffb74d' }}>{establecimientoActual.renspa || 'Sin registrar (Completar en Configurar)'}</b></div>
+                  <div>CUIT: <b>{establecimientoActual.cuit || 'Sin registrar'}</b></div>
+                  <div>Stock Inicial Base: <b>{establecimientoActual.stockInicial || 0} cabezas</b> | Prefijo: <b>{establecimientoActual.prefijo}</b></div>
                 </div>
               ) : (
                 <div style={{ marginTop: '0.8rem' }}>
@@ -710,10 +665,10 @@ export default function App() {
                   <input type="text" value={tempNombre} onChange={(e) => setTempNombre(e.target.value)} style={styles.input} />
                   
                   <label style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem', display: 'block' }}>CUIT:</label>
-                  <input type="text" value={tempCuit} onChange={(e) => setTempCuit(e.target.value)} style={styles.input} />
+                  <input type="text" placeholder="Ej: 20-XXXXXXXX-X" value={tempCuit} onChange={(e) => setTempCuit(e.target.value)} style={styles.input} />
 
-                  <label style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem', display: 'block' }}>RENSPA:</label>
-                  <input type="text" value={tempRenspa} onChange={(e) => setTempRenspa(e.target.value)} style={styles.input} />
+                  <label style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem', display: 'block' }}>RENSPA (Número oficial):</label>
+                  <input type="text" placeholder="Ej: 03.123.0.00456/00" value={tempRenspa} onChange={(e) => setTempRenspa(e.target.value)} style={styles.input} />
 
                   <label style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem', display: 'block' }}>Stock Inicial de Hacienda (Cabezas al iniciar):</label>
                   <input type="number" value={tempStockInicial} onChange={(e) => setTempStockInicial(e.target.value)} style={styles.input} />
@@ -722,43 +677,10 @@ export default function App() {
                   <input type="text" maxLength={10} value={tempPrefijo} onChange={(e) => setTempPrefijo(e.target.value)} style={styles.input} />
 
                   <button style={{ ...styles.btnMain, backgroundColor: '#2e7d32', marginTop: '0.8rem' }} onClick={guardarEstablecimientoActual}>
-                    💾 Guardar Cambios del Establecimiento
+                    💾 Guardar Datos de este RENSPA
                   </button>
                 </div>
               )}
-            </div>
-
-            <div style={{ ...styles.card, border: '2px solid #f57c00' }}>
-              <h3 style={{ color: '#81c784', marginTop: 0 }}>📍 Potrero / Lote Actual de Trabajo</h3>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
-                <select value={potreroActual} onChange={(e) => setPotreroActual(e.target.value)} style={{ ...styles.select, marginTop: 0 }}>
-                  {establecimientoActual.potreros.map((l) => (<option key={l} value={l}>{l}</option>))}
-                </select>
-                <button 
-                  style={{ background: '#c62828', color: '#fff', border: 'none', padding: '0 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
-                  onClick={() => eliminarPotreroDelEstablecimiento(potreroActual)}
-                  title="Eliminar potrero actual"
-                >
-                  🗑️
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input 
-                  type="text" 
-                  placeholder="Nuevo potrero (Ej: Lote 4, Bajo)" 
-                  value={nuevoPotreroInput} 
-                  onChange={(e) => setNuevoPotreroInput(e.target.value)} 
-                  style={{ ...styles.input, marginTop: 0 }} 
-                />
-                <button 
-                  style={{ background: '#f57c00', color: '#000', border: 'none', padding: '0 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
-                  onClick={agregarPotreroAlEstablecimiento}
-                >
-                  ➕ Agregar Potrero
-                </button>
-              </div>
             </div>
 
             <div style={styles.card}>
@@ -894,11 +816,11 @@ export default function App() {
               
               <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '1rem' }}>
                 {registrosDiarios.length === 0 ? (
-                  <p style={{ color: '#aaa' }}>Sin registros definitivos hoy para este establecimiento.</p>
+                  <p style={{ color: '#aaa' }}>Sin registros definitivos hoy para este RENSPA.</p>
                 ) : (
                   registrosDiarios.slice().reverse().map((r, idx) => (
                     <div key={r.id} style={styles.itemReg(r.esExcepcion)}>
-                      <strong>#{registrosDiarios.length - idx}</strong> — Caravana: <b style={{ color: '#81c784' }}>{r.caravana}</b> | <b style={{ color: '#ffb74d' }}>{r.categoria}</b> ({r.sexo}) — 📍 <b>{r.potrero}</b> ({r.operacion})
+                      <strong>#{registrosDiarios.length - idx}</strong> — Caravana: <b style={{ color: '#81c784' }}>{r.caravana}</b> | <b style={{ color: '#ffb74d' }}>{r.categoria}</b> ({r.sexo}) — ({r.operacion})
                     </div>
                   ))
                 )}
@@ -919,29 +841,20 @@ export default function App() {
           <div style={styles.card}>
             <h3 style={{ color: '#81c784', marginTop: 0 }}>📁 Carpeta de Archivo Histórico de Lotes</h3>
             <p style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '1rem' }}>
-              Registros guardados para <b>{establecimientoActual.nombre}</b> (RENSPA: {establecimientoActual.renspa}).
+              Registros guardados para <b>{establecimientoActual.nombre}</b> (RENSPA: {establecimientoActual.renspa || 'Sin registrar'}).
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1rem' }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: '#aaa' }}>Filtrar por Operación:</label>
-                <select value={filtroOperacionHistorial} onChange={(e) => setFiltroOperacionHistorial(e.target.value)} style={styles.select}>
-                  <option value="TODAS">Todas las operaciones</option>
-                  <option value="Nacimiento">Nacimiento</option>
-                  <option value="Venta / Salida">Venta / Salida</option>
-                  <option value="Sanidad / Vacuna">Sanidad / Vacuna</option>
-                  <option value="Alta en Manga">Alta en Manga</option>
-                  <option value="Recaravaneo">Recaravaneo</option>
-                  <option value="Recambio">Recambio</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: '#aaa' }}>Filtrar por Potrero:</label>
-                <select value={filtroPotreroHistorial} onChange={(e) => setFiltroPotreroHistorial(e.target.value)} style={styles.select}>
-                  <option value="TODOS">Todos los potreros</option>
-                  {establecimientoActual.potreros.map(l => <option key={l} value={l}>{l}</option>)}
-                </select>
-              </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.75rem', color: '#aaa' }}>Filtrar por Operación:</label>
+              <select value={filtroOperacionHistorial} onChange={(e) => setFiltroOperacionHistorial(e.target.value)} style={styles.select}>
+                <option value="TODAS">Todas las operaciones</option>
+                <option value="Nacimiento">Nacimiento</option>
+                <option value="Venta / Salida">Venta / Salida</option>
+                <option value="Sanidad / Vacuna">Sanidad / Vacuna</option>
+                <option value="Alta en Manga">Alta en Manga</option>
+                <option value="Recaravaneo">Recaravaneo</option>
+                <option value="Recambio">Recambio</option>
+              </select>
             </div>
 
             {archivoFiltrado.length === 0 ? (
@@ -960,7 +873,7 @@ export default function App() {
                           <span style={{ fontSize: '0.75rem', color: '#aaa' }}>{carpeta.fecha}</span>
                         </div>
                         <div style={{ fontSize: '0.85rem', color: '#ddd', margin: '0.4rem 0' }}>
-                          Potrero: <b>{carpeta.potrero}</b> | Total: <b>{carpeta.cantidad} cabezas</b> (<b style={{ color: '#81c784' }}>{totalM} M</b>, <b style={{ color: '#ff8a80' }}>{totalH} H</b>)
+                          Total: <b>{carpeta.cantidad} cabezas</b> (<b style={{ color: '#81c784' }}>{totalM} M</b>, <b style={{ color: '#ff8a80' }}>{totalH} H</b>)
                         </div>
                         <button 
                           style={{ background: '#2e7d32', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem', marginTop: '0.3rem' }}
@@ -974,7 +887,7 @@ export default function App() {
                 </div>
 
                 <button style={{ ...styles.btnMain, backgroundColor: '#c62828' }} onClick={vaciarArchivoHistorico}>
-                  🗑️ Vaciar Archivo Histórico de este Establecimiento
+                  🗑️ Vaciar Archivo Histórico de este RENSPA
                 </button>
               </div>
             )}
