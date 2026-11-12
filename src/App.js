@@ -9,10 +9,10 @@ export default function App() {
   const [tab, setTab] = useState('diario');
 
   const [fechaRegistroApp] = useState(() => {
-    let saved = localStorage.getItem('ganado_fecha_registro_app_v9');
+    let saved = localStorage.getItem('ganado_fecha_registro_app_v10');
     if (!saved) {
       saved = new Date().toISOString();
-      localStorage.setItem('ganado_fecha_registro_app_v9', saved);
+      localStorage.setItem('ganado_fecha_registro_app_v10', saved);
     }
     return new Date(saved);
   });
@@ -36,7 +36,7 @@ export default function App() {
   };
 
   const [establecimientos, setEstablecimientos] = useState(() => {
-    const saved = localStorage.getItem('ganado_establecimientos_v9');
+    const saved = localStorage.getItem('ganado_establecimientos_v10');
     if (saved) return JSON.parse(saved);
     return [
       {
@@ -51,7 +51,7 @@ export default function App() {
   });
 
   const [estacionActivaId, setEstacionActivaId] = useState(() => {
-    const saved = localStorage.getItem('ganado_estacion_activa_id_v9');
+    const saved = localStorage.getItem('ganado_estacion_activa_id_v10');
     return saved ? Number(saved) : 1;
   });
 
@@ -87,7 +87,7 @@ export default function App() {
       return est;
     });
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v9', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v10', JSON.stringify(actualizados));
     setEditandoEstablecimiento(false);
     alert('✅ Datos guardados correctamente.');
   };
@@ -108,15 +108,15 @@ export default function App() {
 
     let actualizados = [...establecimientos, nuevoEst];
     setEstablecimientos(actualizados);
-    localStorage.setItem('ganado_establecimientos_v9', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_establecimientos_v10', JSON.stringify(actualizados));
     setEstacionActivaId(nuevoEst.id);
-    localStorage.setItem('ganado_estacion_activa_id_v9', nuevoEst.id);
+    localStorage.setItem('ganado_estacion_activa_id_v10', nuevoEst.id);
     alert(`📁 Nuevo RENSPA "${nombreNuevo}" agregado.`);
   };
 
   const seleccionarEstablecimiento = (id) => {
     setEstacionActivaId(id);
-    localStorage.setItem('ganado_estacion_activa_id_v9', id);
+    localStorage.setItem('ganado_estacion_activa_id_v10', id);
   };
 
   const [operacionActual, setOperacionActual] = useState('Nacimiento');
@@ -126,13 +126,13 @@ export default function App() {
     return ['Terneras', 'Vaquillonas', 'Vacas'].includes(cat) ? 'H' : 'M';
   };
 
-  const claveReg = `ganado_registros_v9_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveReg = `ganado_registros_v10_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [registrosDiarios, setRegistrosDiarios] = useState(() => {
     const saved = localStorage.getItem(claveReg);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const claveHist = `ganado_historico_v9_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const claveHist = `ganado_historico_v10_${(establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_')}`;
   const [archivoHistorico, setArchivoHistorico] = useState(() => {
     const saved = localStorage.getItem(claveHist);
     return saved ? JSON.parse(saved) : [];
@@ -140,8 +140,8 @@ export default function App() {
 
   useEffect(() => {
     const idKey = (establecimientoActual.renspa || establecimientoActual.nombre).replace(/[^a-zA-Z0-9]/g, '_');
-    const cReg = `ganado_registros_v9_${idKey}`;
-    const cHist = `ganado_historico_v9_${idKey}`;
+    const cReg = `ganado_registros_v10_${idKey}`;
+    const cHist = `ganado_historico_v10_${idKey}`;
     const regSaved = localStorage.getItem(cReg);
     const histSaved = localStorage.getItem(cHist);
     setRegistrosDiarios(regSaved ? JSON.parse(regSaved) : []);
@@ -152,7 +152,7 @@ export default function App() {
   const [loteTemporal, setLoteTemporal] = useState([]);
 
   const [packsComprados, setPacksComprados] = useState(() => {
-    const saved = localStorage.getItem('ganado_packs_comprados_v9');
+    const saved = localStorage.getItem('ganado_packs_comprados_v10');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -161,7 +161,7 @@ export default function App() {
   const [RangoHasta, setRangoHasta] = useState('');
 
   const [vacunaciones, setVacunaciones] = useState(() => {
-    const saved = localStorage.getItem('ganado_vacunaciones_v9');
+    const saved = localStorage.getItem('ganado_vacunaciones_v10');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -180,7 +180,7 @@ export default function App() {
     };
     let actualizados = [...packsComprados, nuevoPack];
     setPacksComprados(actualizados);
-    localStorage.setItem('ganado_packs_comprados_v9', JSON.stringify(actualizados));
+    localStorage.setItem('ganado_packs_comprados_v10', JSON.stringify(actualizados));
 
     let mensajePedido = `*📦 SOLICITUD DE PACK DE CARAVANAS*\n`;
     mensajePedido += `Establecimiento: ${establecimientoActual.nombre}\n`;
@@ -229,7 +229,7 @@ export default function App() {
 
     let actualizadas = [nuevaVacuna, ...vacunaciones];
     setVacunaciones(actualizadas);
-    localStorage.setItem('ganado_vacunaciones_v9', JSON.stringify(actualizadas));
+    localStorage.setItem('ganado_vacunaciones_v10', JSON.stringify(actualizadas));
     setLoteVacuna('');
     alert(`💉 Vacunación registrada correctamente.`);
   };
@@ -800,7 +800,7 @@ export default function App() {
               </select>
             </div>
 
-            <div style={{ background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem' }, {background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem'}}>
+            <div style={{ background: '#252525', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginBottom: '1rem' }}>
               <strong style={{ color: '#81c784' }}>🏦 Datos para Abonar el Plan {planSuscripcionSeleccionado} ({obtenerPrecioPlan(planSuscripcionSeleccionado)}):</strong>
               <p style={{ margin: '0.5rem 0 0.2rem 0', fontSize: '0.9rem' }}>Banco: <b>Banco Provincia</b></p>
               <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}>Alias: <b style={{ color: '#ffb74d' }}>{aliasBco}</b></p>
